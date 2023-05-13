@@ -4,16 +4,16 @@
 
 namespace reflection {
 
-    class UClass
+    class NClass
     {
     public:
 
         template<typename T>
         friend class TClassRegistry;
 
-        UClass() = default;
+        NClass() = default;
 
-        bool IsChildOf(const UClass *BaseClass) const
+        bool IsChildOf(const NClass *BaseClass) const
         {
             if (Type->GetTypeName() == BaseClass->Type->GetTypeName())
                 return true;
@@ -33,12 +33,12 @@ namespace reflection {
             return false;
         }
 
-        inline bool operator==(const UClass &Other) const
+        inline bool operator==(const NClass &Other) const
         {
             return Type == Other.Type;
         }
 
-        inline bool operator<(const UClass &Other) const
+        inline bool operator<(const NClass &Other) const
         {
             return Type < Other.Type;
         }

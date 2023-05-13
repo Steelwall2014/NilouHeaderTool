@@ -2,15 +2,15 @@
 
 #define NCLASS __attribute__((annotate("reflect-class")))
 
-#define UPROPERTY() __attribute__((annotate("reflect-property")))
+#define NPROPERTY() __attribute__((annotate("reflect-property")))
 
-#define UFUNCTION() __attribute__((annotate("reflect-method")))
+#define NFUNCTION() __attribute__((annotate("reflect-method")))
 
 #define GENERATE_BODY() \
     private: \
         template<typename T>  \
         friend class reflection::TClassRegistry; \
-        static std::unique_ptr<reflection::UClass> StaticClass_; \
+        static std::unique_ptr<reflection::NClass> StaticClass_; \
     public: \
-        virtual const reflection::UClass *GetClass(); \
-        static const reflection::UClass *StaticClass();
+        virtual const reflection::NClass *GetClass(); \
+        static const reflection::NClass *StaticClass();

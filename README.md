@@ -22,3 +22,60 @@ The first parameter is the directory of header files. The second parameter is th
 ```sh
 NilouHeaderTool D:/NilouHeaderTool/Test D:/NilouHeaderTool/Test/Generated D:/NilouHeaderTool/src/include
 ```
+## How to use
+
+1. Include library
+```c++
+#include <reflection/TypeDescriptor.h>
+#include <reflection/Registry.h>
+#include <reflection/Class.h>
+#include <reflection/Macros.h>
+```
+2. Create a class called Base
+```c++
+#include <reflection/TypeDescriptor.h>
+#include <reflection/Registry.h>
+#include <reflection/Class.h>
+#include <reflection/Macros.h>
+
+class Base
+{
+public:
+    Base() { }
+    Base(int a): BaseField(a) { }
+
+    int BaseField;
+
+    void foo()
+    {
+        cout << "foo";
+    }
+};
+```
+3. Add marks
+```c++
+#include <reflection/TypeDescriptor.h>
+#include <reflection/Registry.h>
+#include <reflection/Class.h>
+#include <reflection/Macros.h>
+
+class NCLASS Base
+{
+public:
+    Base() { }
+    Base(int a): BaseField(a) { }
+
+    NPROPERTY()
+    int BaseField;
+
+    NFUNCTION()
+    void foo()
+    {
+        cout << "foo";
+    }
+};
+```
+4. At last, run header tool to generate reflection codes
+```sh
+NilouHeaderTool D:/NilouHeaderTool/Test D:/NilouHeaderTool/Test/Generated D:/NilouHeaderTool/src/include
+```

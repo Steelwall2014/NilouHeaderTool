@@ -96,7 +96,7 @@ bool NeedsReflection(string filepath)
         [](CXCursor c, CXCursor parent, CXClientData client_data)
         {
             string s = GetCursorSpelling(c);
-            if (s == "NCLASS" || s == "UPROPERTY")
+            if (s == "NCLASS" || s == "NPROPERTY")
             {
                 bool* needs_reflection = reinterpret_cast<bool*>(client_data);
                 *needs_reflection = true;
@@ -276,12 +276,12 @@ R"(#include "{0}"
 using namespace nilou;
 using namespace reflection;
 
-std::unique_ptr<UClass> {1}::StaticClass_ = nullptr;
-const UClass *{1}::GetClass() 
+std::unique_ptr<NClass> {1}::StaticClass_ = nullptr;
+const NClass *{1}::GetClass() 
 {{ 
     return {1}::StaticClass(); 
 }}
-const UClass *{1}::StaticClass()
+const NClass *{1}::StaticClass()
 {{
     return {1}::StaticClass_.get();
 }}
@@ -291,7 +291,7 @@ struct TClassRegistry<{1}>
 {{
     TClassRegistry(const std::string& InName)
     {{
-        {1}::StaticClass_ = std::make_unique<UClass>();
+        {1}::StaticClass_ = std::make_unique<NClass>();
         reflection::AddClass<{1}>("{1}")
 {2}{3}{4}{5};
         {1}::StaticClass_->Type = reflection::Registry::GetTypeByName(InName);

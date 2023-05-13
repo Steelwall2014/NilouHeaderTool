@@ -18,10 +18,10 @@ namespace nilou {
 
         Base(int a): BaseField(a) { }
 
-        UPROPERTY()
+        NPROPERTY()
         int BaseField;
 
-        UFUNCTION()
+        NFUNCTION()
         void foo()
         {
 
@@ -35,7 +35,7 @@ namespace nilou {
 
     public:
 
-        UPROPERTY()
+        NPROPERTY()
         std::string DerivedField;
 
     };

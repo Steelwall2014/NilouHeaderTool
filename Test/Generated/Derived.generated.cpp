@@ -5,12 +5,12 @@
 using namespace nilou;
 using namespace reflection;
 
-std::unique_ptr<UClass> Derived::StaticClass_ = nullptr;
-const UClass *Derived::GetClass() 
+std::unique_ptr<NClass> Derived::StaticClass_ = nullptr;
+const NClass *Derived::GetClass() 
 { 
     return Derived::StaticClass(); 
 }
-const UClass *Derived::StaticClass()
+const NClass *Derived::StaticClass()
 {
     return Derived::StaticClass_.get();
 }
@@ -20,7 +20,7 @@ struct TClassRegistry<Derived>
 {
     TClassRegistry(const std::string& InName)
     {
-        Derived::StaticClass_ = std::make_unique<UClass>();
+        Derived::StaticClass_ = std::make_unique<NClass>();
         reflection::AddClass<Derived>("Derived")
 				   .AddConstructor<>()
 				   .AddMemberVariable("DerivedField", &Derived::DerivedField)

@@ -5,12 +5,12 @@
 using namespace nilou;
 using namespace reflection;
 
-std::unique_ptr<UClass> Base::StaticClass_ = nullptr;
-const UClass *Base::GetClass() 
+std::unique_ptr<NClass> Base::StaticClass_ = nullptr;
+const NClass *Base::GetClass() 
 { 
     return Base::StaticClass(); 
 }
-const UClass *Base::StaticClass()
+const NClass *Base::StaticClass()
 {
     return Base::StaticClass_.get();
 }
@@ -20,7 +20,7 @@ struct TClassRegistry<Base>
 {
     TClassRegistry(const std::string& InName)
     {
-        Base::StaticClass_ = std::make_unique<UClass>();
+        Base::StaticClass_ = std::make_unique<NClass>();
         reflection::AddClass<Base>("Base")
 				   .AddConstructor<>()
 				   .AddConstructor<int>()
