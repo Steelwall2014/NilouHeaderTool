@@ -24,5 +24,5 @@
         friend class reflection::TClassRegistry; \
         static std::unique_ptr<reflection::NClass> StaticClass_; \
     public: \
-        virtual const reflection::NClass *GetClass(); const\
+        virtual const reflection::NClass *GetClass() const; \
         static const reflection::NClass *StaticClass();
