@@ -205,14 +205,14 @@ namespace reflection {
         void Add()
         {
             Helper<TArgs...>::Function = 
-                [](TArgs&&... Args) -> std::any 
+                [](TArgs&&... Args) -> void* 
                 {
                     return new TClass(std::forward<TArgs>(Args)...);
                 };
         }
 
         template<typename ...TArgs>
-        std::any Invoke(TArgs&&... Args) const
+        void* Invoke(TArgs&&... Args) const
         {
             auto& func = Helper<TArgs...>::Function;
             if (func)
@@ -224,12 +224,12 @@ namespace reflection {
         template<typename ...TArgs>
         struct Helper
         {
-            static std::optional<std::function<std::any(TArgs&&...)>> Function;
+            static std::optional<std::function<void*(TArgs&&...)>> Function;
         };
 
     };
 
     template<typename ...TArgs>
-    std::optional<std::function<std::any(TArgs&&...)>> Constructor::Helper<TArgs...>::Function = std::nullopt;
+    std::optional<std::function<void*(TArgs&&...)>> Constructor::Helper<TArgs...>::Function = std::nullopt;
 
 }
