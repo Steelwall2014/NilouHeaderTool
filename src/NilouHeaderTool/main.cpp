@@ -277,7 +277,7 @@ using namespace nilou;
 using namespace reflection;
 
 std::unique_ptr<NClass> {1}::StaticClass_ = nullptr;
-const NClass *{1}::GetClass() 
+const NClass *{1}::GetClass() const 
 {{ 
     return {1}::StaticClass(); 
 }}
