@@ -19,10 +19,10 @@ namespace reflection {
             Registry::Instance().Register(std::move(Descriptor));
         }
 
-        template<class TClass, typename ...TArgs>
-        void AddConstructor() 
+        template<class TClass>
+        void AddDefaultConstructor() 
         {
-            Descriptor->Ctor.Add<TClass, TArgs...>();
+            Descriptor->DefaultCtor = std::make_unique<Constructor>((TClass*)nullptr);
         }
 
         template<class TClass, typename TVar>
@@ -61,10 +61,9 @@ namespace reflection {
     public:
         explicit TypeDescriptorBuilder(const std::string& name) : RawBuilder(name) {}
 
-        template<typename ...TArgs>
-        TypeDescriptorBuilder& AddConstructor() 
+        TypeDescriptorBuilder& AddDefaultConstructor() 
         {
-            RawBuilder.AddConstructor<TClass, TArgs...>();
+            RawBuilder.AddDefaultConstructor<TClass>();
             return *this;
         }
 

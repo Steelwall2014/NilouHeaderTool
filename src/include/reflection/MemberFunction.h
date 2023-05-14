@@ -199,37 +199,22 @@ namespace reflection {
     class Constructor
     {
     public:
-        Constructor() = default;
 
-        template<typename TClass, typename ...TArgs>
-        void Add()
+        template<typename TClass>
+        Constructor(TClass*)
         {
-            Helper<TArgs...>::Function = 
-                [](TArgs&&... Args) -> void* 
-                {
-                    return new TClass(std::forward<TArgs>(Args)...);
-                };
+            function = []() {
+                return new TClass;
+            };
         }
 
-        template<typename ...TArgs>
-        void* Invoke(TArgs&&... Args) const
+        void* Invoke() const
         {
-            auto& func = Helper<TArgs...>::Function;
-            if (func)
-                return (*func)(std::forward<TArgs>(Args)...);
-
-            throw std::runtime_error("Mismatching argument types for constructor");
+            return function();
         }
 
-        template<typename ...TArgs>
-        struct Helper
-        {
-            static std::optional<std::function<void*(TArgs&&...)>> Function;
-        };
+        std::function<void*(void)> function;
 
     };
-
-    template<typename ...TArgs>
-    std::optional<std::function<void*(TArgs&&...)>> Constructor::Helper<TArgs...>::Function = std::nullopt;
 
 }

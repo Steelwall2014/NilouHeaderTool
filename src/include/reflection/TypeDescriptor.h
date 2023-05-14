@@ -34,9 +34,9 @@ namespace reflection {
             return nullptr;
         }
 
-        const Constructor& GetConstructor() const
+        const Constructor& GetDefaultConstructor() const
         {
-            return Ctor;
+            return *DefaultCtor;
         }
 
         const std::set<std::string>& GetParentClasses() const
@@ -51,7 +51,7 @@ namespace reflection {
 
     private:
         std::string TypeName;
-        Constructor Ctor;
+        std::unique_ptr<Constructor> DefaultCtor;
         std::set<std::string> ParentClasses;
         std::set<std::string> DerivedClasses;
         std::map<std::string, std::unique_ptr<MemberVariable>> MemberVariables;

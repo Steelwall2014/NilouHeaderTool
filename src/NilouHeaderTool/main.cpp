@@ -232,18 +232,20 @@ void GenerateCode()
         string CtorBody;
         for (auto& Args : NClass.Constructors)
         {
-            string args;
-            for (int i = 0; i < Args.size(); i++)
-            {
-                args += Args[i];
-                if (i < Args.size()-1)
-                    args += ", ";
-            }
-            CtorBody += indent+format(".AddConstructor<{}>()\n", args);
+            if (Args.size() == 0)
+                CtorBody += indent+".AddDefaultConstructor()\n";
+            // string args;
+            // for (int i = 0; i < Args.size(); i++)
+            // {
+            //     args += Args[i];
+            //     if (i < Args.size()-1)
+            //         args += ", ";
+            // }
+            // CtorBody += indent+format(".AddConstructor<{}>()\n", args);
         }
         if (NClass.Constructors.size() == 0)
         {
-            CtorBody += indent+".AddConstructor<>()\n";
+            CtorBody += indent+".AddDefaultConstructor()\n";
         }
         string FieldsBody;
         for (auto& [FieldName, FieldType] : NClass.Fields)

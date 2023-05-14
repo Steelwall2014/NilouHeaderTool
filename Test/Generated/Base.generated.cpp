@@ -22,8 +22,7 @@ struct TClassRegistry<Base>
     {
         Base::StaticClass_ = std::make_unique<NClass>();
         reflection::AddClass<Base>("Base")
-				   .AddConstructor<>()
-				   .AddConstructor<int>()
+				   .AddDefaultConstructor()
 				   .AddMemberVariable("BaseField", &Base::BaseField)
 				   .AddMemberFunction("foo", &Base::foo)
 				   .AddDerivedClass("Derived")
