@@ -6,7 +6,7 @@ using namespace nilou;
 using namespace reflection;
 
 std::unique_ptr<NClass> Derived::StaticClass_ = nullptr;
-const NClass *Derived::GetClass() 
+const NClass *Derived::GetClass() const 
 { 
     return Derived::StaticClass(); 
 }
