@@ -26,6 +26,7 @@ target("Test")
     add_files("test/**.cpp")
     set_languages("clatest")
     set_languages("cxx20")
+    add_includedirs("./External/include")
     add_includedirs("./src/include")
 
 --

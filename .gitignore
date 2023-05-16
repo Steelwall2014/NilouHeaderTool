@@ -3,6 +3,7 @@
 build/
 .vscode/
 .cache/
+.deprecated/
 compile_commands.json
 
 # MacOS Cache

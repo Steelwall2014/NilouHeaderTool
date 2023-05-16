@@ -226,57 +226,49 @@ void ParseHeaderFile(string filepath)
 
 void GenerateCode()
 {
-    static const string& indent = "\t\t\t\t   ";
+    static const string& indent = "\t\t";
     for (auto& [ClassName, NClass] : NClasses)
     {
         string CtorBody;
         for (auto& Args : NClass.Constructors)
         {
-            if (Args.size() == 0)
-                CtorBody += indent+".AddDefaultConstructor()\n";
-            // string args;
-            // for (int i = 0; i < Args.size(); i++)
-            // {
-            //     args += Args[i];
-            //     if (i < Args.size()-1)
-            //         args += ", ";
-            // }
-            // CtorBody += indent+format(".AddConstructor<{}>()\n", args);
-        }
-        if (NClass.Constructors.size() == 0)
-        {
-            CtorBody += indent+".AddDefaultConstructor()\n";
+            string args;
+            for (int i = 0; i < Args.size(); i++)
+            {
+                args += ", " + Args[i];
+            }
+            CtorBody += indent+format("Mngr.AddConstructor<{}{}>();\n", ClassName, args);
         }
         string FieldsBody;
         for (auto& [FieldName, FieldType] : NClass.Fields)
         {
-            FieldsBody += indent+format(".AddMemberVariable(\"{0}\", &{1}::{0})\n", 
+            FieldsBody += indent+format("Mngr.AddField<&{1}::{0}>(\"{0}\");\n", 
                 FieldName, ClassName);
         }
         string MethodsBody;
         for (auto& MethodName : NClass.Methods)
         {
-            MethodsBody += indent+format(".AddMemberFunction(\"{0}\", &{1}::{0})\n", 
+            MethodsBody += indent+format("Mngr.AddMethod<&{1}::{0}>(\"{0}\");\n", 
                 MethodName, ClassName);
         }
         string ClassHierarchyBody;
         for (auto& ParentClass : NClass.BaseClasses)
         {
-            ClassHierarchyBody += indent+format(".AddParentClass(\"{0}\")\n", 
-                ParentClass);
+            ClassHierarchyBody += indent+format("Mngr.AddBases<{}, {}>();\n", 
+                ClassName, ParentClass);
         }
-        for (auto& DerivedClass : NClass.DerivedClasses)
-        {
-            ClassHierarchyBody += indent+format(".AddDerivedClass(\"{0}\")\n", 
-                DerivedClass);
-        }
+        // for (auto& DerivedClass : NClass.DerivedClasses)
+        // {
+        //     ClassHierarchyBody += indent+format(".AddDerivedClass(\"{0}\")\n", 
+        //         DerivedClass);
+        // }
         NClass.GeneratedFileCode = format(
 R"(#include "{0}"
-#include "reflection/TypeDescriptorBuilder.h"
-#include "reflection/Class.h"
+#include <UDRefl/UDRefl.hpp>
 
 using namespace nilou;
-using namespace reflection;
+using namespace Ubpa;
+using namespace Ubpa::UDRefl;
 
 std::unique_ptr<NClass> {1}::StaticClass_ = nullptr;
 const NClass *{1}::GetClass() const 
@@ -294,9 +286,10 @@ struct TClassRegistry<{1}>
     TClassRegistry(const std::string& InName)
     {{
         {1}::StaticClass_ = std::make_unique<NClass>();
-        reflection::AddClass<{1}>("{1}")
+        Mngr.RegisterType<{1}>();
 {2}{3}{4}{5};
-        {1}::StaticClass_->Type = reflection::Registry::GetTypeByName(InName);
+        {1}::StaticClass_->Type = Type_of<{1}>;
+        {1}::StaticClass_->TypeInfo = Mngr.GetTypeInfo(Type_of<{1}>);
     }}
 
     static TClassRegistry<{1}> Dummy;
