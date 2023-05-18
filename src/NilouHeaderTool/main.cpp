@@ -73,7 +73,6 @@ struct TypeMetaData
     string MetaType; // class or struct
 };
 map<string, TypeMetaData> NTypes;
-string current_filepath;
 
 string fully_qualified(CXCursor c)
 {
@@ -354,7 +353,6 @@ bool NeedsReflection(string filepath)
 
 void ParseHeaderFile(string filepath)
 {
-    current_filepath = filepath;
     CXIndex index = clang_createIndex(0, 0);
     CXTranslationUnit unit = clang_parseTranslationUnit(
         index,
@@ -366,7 +364,9 @@ void ParseHeaderFile(string filepath)
         cerr << "Unable to parse translation unit. Quitting." << endl;
         return;
     }
-    vector<CXCursor> reflection_classes;
+    pair<vector<CXCursor>, string> data;
+    vector<CXCursor>& reflection_classes = data.first;
+    data.second = filepath;
     CXCursor cursor = clang_getTranslationUnitCursor(unit);
     clang_visitChildren(
         cursor,
@@ -378,8 +378,10 @@ void ParseHeaderFile(string filepath)
                 string class_name = fully_qualified(parent);
                 if ((s == "reflect-class" || s == "reflect-struct") && !NTypes.contains(class_name)) 
                 {
-                    vector<CXCursor>* reflection_classes = reinterpret_cast<vector<CXCursor>*>(client_data);
-                    reflection_classes->push_back(parent);
+                    pair<vector<CXCursor>, string>* data = reinterpret_cast<pair<vector<CXCursor>, string>*>(client_data);
+                    vector<CXCursor>& reflection_classes = data->first;
+                    string& current_filepath = data->second;
+                    reflection_classes.push_back(parent);
                     NTypes[class_name].Name = class_name;
                     NTypes[class_name].FileName = current_filepath;
                     if (s == "reflect-class")
@@ -391,7 +393,7 @@ void ParseHeaderFile(string filepath)
             
             return CXChildVisit_Recurse;
         },
-        &reflection_classes);
+        &data);
 
     for (auto& cursor : reflection_classes)
     {
