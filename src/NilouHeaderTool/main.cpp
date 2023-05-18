@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <clang-c/Index.h>
 #include <regex>
+#include <execution>
 
 #include "utils.h"
 
@@ -693,6 +694,8 @@ int main(int argc, char *argv[])
 
     std::vector<string> ClassNames;
 
+    std::vector<string> files;
+
     Directory dir(DirectoryName);
     dir.ForEachFile(true, 
     [&](const std::string& filepath) 
@@ -700,9 +703,20 @@ int main(int argc, char *argv[])
             if ((EndsWith(filepath, ".h") || EndsWith(filepath, ".hpp")) && 
                  NeedsReflection(filepath))
             {
-                cout << filepath << endl;
-                ParseHeaderFile(filepath);
+                files.push_back(filepath);
             }
+        });
+
+    #ifdef NILOU_DEBUG
+    auto policy = std::execution::seq;
+    #else
+    auto policy = std::execution::par;
+    #endif
+
+    std::for_each(policy, files.begin(), files.end(), 
+        [](const string& filepath) {
+            cout << filepath << endl;
+            ParseHeaderFile(filepath);
         });
 
     GenerateCode();

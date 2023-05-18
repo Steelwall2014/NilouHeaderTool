@@ -20,6 +20,9 @@ target("NilouHeaderTool")
     add_includedirs("./External/include")
     add_links("./External/lib/*")
     after_build(copyFunc)
+    if is_mode("debug") then 
+        add_defines("NILOU_DEBUG")
+    end
 
 target("Test")
     set_kind("binary")
