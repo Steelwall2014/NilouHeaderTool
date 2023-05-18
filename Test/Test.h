@@ -64,7 +64,7 @@ public:
     std::string DerivedField;
 
     NPROPERTY()
-    FBinaryBuffer Buffer;
+    std::vector<FBinaryBuffer> Buffer;
 
 };
 

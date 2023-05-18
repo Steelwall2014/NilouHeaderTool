@@ -239,6 +239,31 @@ public:
 };
 
 template<typename T>
+class TStaticSerializer<std::vector<T>>
+{
+    using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
+public:
+    static void Serialize(const std::vector<RawT> &Object, FArchive& Ar) 
+    { 
+        for (int i = 0; i < Object.size(); i++)
+        {
+            nlohmann::json& Node = Ar.Node.emplace_back();
+            FArchive local_Ar(Node, Ar);
+            TStaticSerializer<RawT>::Serialize(Object[i], local_Ar);
+        }
+    }
+    static void Deserialize(std::vector<RawT> &Object, FArchive& Ar) 
+    { 
+        Object.resize(Ar.Node.size());
+        for (int i = 0; i < Object.size(); i++)
+        {
+            FArchive local_Ar(Ar.Node[i], Ar);
+            TStaticSerializer<RawT>::Deserialize(Object[i], local_Ar);
+        }
+    }
+};
+
+template<typename T>
 class TStaticSerializer<std::shared_ptr<T>>
 {
     using RawT = std::remove_cv_t<std::remove_reference_t<T>>;

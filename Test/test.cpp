@@ -14,12 +14,13 @@ int main()
         derived->BaseField = 1;
         derived->my_struct = MyStruct{{1}, 2, derived};
         derived->DerivedField = "123456";
-        derived->Buffer.Buffer = std::make_shared<unsigned char[]>(10);
+        FBinaryBuffer& Buffer = derived->Buffer.emplace_back();
+        Buffer.Buffer = std::make_shared<unsigned char[]>(10);
         for (int i = 0; i < 10; i++)
         {
-            derived->Buffer.Buffer.get()[i] = 'a'+i;
+            Buffer.Buffer.get()[i] = 'a'+i;
         }
-        derived->Buffer.BufferSize = 10;
+        Buffer.BufferSize = 10;
         derived->Serialize(Ar);
         std::ofstream out("test.nasset", std::ios::binary);
         out << Ar;

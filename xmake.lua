@@ -29,6 +29,7 @@ target("Test")
     add_includedirs("./External/include")
     add_includedirs("./src/include")
     set_runtimes("MD")
+    add_cxxflags("/bigobj")
     add_links("./External/lib/*")
 
 --

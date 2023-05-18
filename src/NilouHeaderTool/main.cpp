@@ -213,7 +213,8 @@ bool IsNStructOrBuiltin(CXCursor c)
         "umat2",
         "umat3",
         "umat4",
-        "std::string"
+        "std::string",
+        "FBinaryBuffer"
     };
     string TypeName = GetCursorTypeSpelling(c);
     if (built_ins.contains(TypeName) || IsReflectedStruct(TypeName))
