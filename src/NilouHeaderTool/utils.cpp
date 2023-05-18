@@ -48,6 +48,14 @@ string GetCursorTypeSpelling(CXCursor c)
     return s;
 }
 
+string GetTypeSpelling(CXType t)
+{
+    auto str = clang_getTypeSpelling(t);
+    string s = clang_getCString(str);
+    clang_disposeString(str);
+    return s;
+}
+
 std::string GetClangString(const CXString& str) 
 {
     std::string c_str = clang_getCString(str);

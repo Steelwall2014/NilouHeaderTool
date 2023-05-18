@@ -11,6 +11,8 @@ std::string GetCursorKindSpelling(CXCursor c);
 
 std::string GetCursorTypeSpelling(CXCursor c);
 
+std::string GetTypeSpelling(CXType t);
+
 std::string GetClangString(const CXString& str);
 
 bool EndsWith(const std::string &str, const std::string &temp);

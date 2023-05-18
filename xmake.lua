@@ -28,6 +28,8 @@ target("Test")
     set_languages("cxx20")
     add_includedirs("./External/include")
     add_includedirs("./src/include")
+    set_runtimes("MD")
+    add_links("./External/lib/*")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
