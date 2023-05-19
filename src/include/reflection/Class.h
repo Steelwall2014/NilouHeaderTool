@@ -79,6 +79,16 @@ struct FArchiveBuffer
     FArchiveBuffer(nlohmann::json &InCurrentNode, FBinaryBuffer InBuffer)
         : Node(InCurrentNode), Buffer(InBuffer)
     { }
+    FArchiveBuffer(const FArchiveBuffer& Other)
+        : Node(Other.Node)
+        , Buffer(Other.Buffer)
+    { }
+    FArchiveBuffer& operator=(const FArchiveBuffer& Other)
+    { 
+        Node = Other.Node;
+        Buffer = Other.Buffer;
+        return *this;
+    }
     nlohmann::json &Node;
     FBinaryBuffer Buffer;
 };
@@ -99,6 +109,21 @@ public:
         : Node(CurrentNode) 
         , OutBuffers(OutBuffers)
     { }
+    FArchive(const FArchive& Other)
+        : FArchive(Other.Node, Other)
+    { }
+    FArchive& operator=(const FArchive& Other)
+    {
+        Node = Other.Node;
+        OutBuffers = Other.OutBuffers;
+        Version = Other.Version;
+        FileLength = Other.FileLength;
+        JsonLength = Other.JsonLength;
+        BinLength = Other.BinLength;
+        InBuffer = Other.InBuffer;
+
+        return *this;
+    }
     nlohmann::json& Node;
     std::vector<FArchiveBuffer>& OutBuffers;
     unsigned int Version;
