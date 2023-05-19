@@ -178,16 +178,31 @@ bool IsNStructOrBuiltin(CXType Type)
 
 bool IsSupportedContainer(CXType Type)
 {
-    int num = clang_Type_getNumTemplateArguments(Type);
-    if (num == 0)
-        return false;
-    for (int i = 0; i < num; i++)
+    string TypeName = GetClangString(clang_getTypeSpelling(Type));
+    std::smatch match;
+    if (regex_match(TypeName, match, regex("std::(vector|array|set|map|unordered_map|unordered_set)<.+>")))
     {
-        CXType T = clang_Type_getTemplateArgumentAsType(Type, i);
-        if (!IsNStructOrBuiltin(T) && !IsNClassPtr(T) && !IsNClassSmartPtr(T))
-            return false;
+        if (match[1].str() == "array")
+        {
+            CXType T = clang_Type_getTemplateArgumentAsType(Type, 0);
+            if (!IsNStructOrBuiltin(T) && !IsNClassPtr(T) && !IsNClassSmartPtr(T))
+                return false;
+        }
+        else 
+        {
+            int num = clang_Type_getNumTemplateArguments(Type);
+            if (num == 0)
+                return false;
+            for (int i = 0; i < num; i++)
+            {
+                CXType T = clang_Type_getTemplateArgumentAsType(Type, i);
+                if (!IsNStructOrBuiltin(T) && !IsNClassPtr(T) && !IsNClassSmartPtr(T))
+                    return false;
+            }
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
 string GetRawType(const string& T)
@@ -502,14 +517,10 @@ void {0}::Serialize(FArchive& Ar)
 
 void {0}::Deserialize(FArchive& Ar)
 {{
-    if (this->bIsSerializing)
-        return;
-    this->bIsSerializing = true;
     nlohmann::json& Node = Ar.Node;
     nlohmann::json &content = Node["Content"];
 {3}
     {4}
-    this->bIsSerializing = false;
 }}
 )", ClassName, BaseSerialize, SerializeBody, DeserializeBody, BaseDeserialize);
     }

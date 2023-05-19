@@ -22,8 +22,10 @@ struct TClassRegistry<nilou::MyStruct>
         nilou::MyStruct::StaticClass_ = std::make_unique<NClass>();
         Mngr.RegisterType<nilou::MyStruct>();
 		Mngr.AddField<&nilou::MyStruct::a>("a");
+		Mngr.AddField<&nilou::MyStruct::arr>("arr");
 		Mngr.AddField<&nilou::MyStruct::base>("base");
-		Mngr.AddField<&nilou::MyStruct::e>("e");
+		Mngr.AddField<&nilou::MyStruct::m>("m");
+		Mngr.AddField<&nilou::MyStruct::s>("s");
 		Mngr.AddField<&nilou::MyStruct::vec>("vec");
 ;
         nilou::MyStruct::StaticClass_->Type = Type_of<nilou::MyStruct>;
@@ -46,12 +48,20 @@ void nilou::MyStruct::Serialize(FArchive& Ar)
         TStaticSerializer<int>::Serialize(this->a, local_Ar);
     }
     {
+        FArchive local_Ar(content["arr"], Ar);
+        TStaticSerializer<std::array<Enum, 10>>::Serialize(this->arr, local_Ar);
+    }
+    {
         FArchive local_Ar(content["base"], Ar);
         TStaticSerializer<nilou::Base *>::Serialize(this->base, local_Ar);
     }
     {
-        FArchive local_Ar(content["e"], Ar);
-        TStaticSerializer<std::vector<Enum>>::Serialize(this->e, local_Ar);
+        FArchive local_Ar(content["m"], Ar);
+        TStaticSerializer<std::map<int, int>>::Serialize(this->m, local_Ar);
+    }
+    {
+        FArchive local_Ar(content["s"], Ar);
+        TStaticSerializer<std::set<int>>::Serialize(this->s, local_Ar);
     }
     {
         FArchive local_Ar(content["vec"], Ar);
@@ -68,15 +78,25 @@ void nilou::MyStruct::Deserialize(FArchive& Ar)
         FArchive local_Ar(content["a"], Ar);
         TStaticSerializer<int>::Deserialize(this->a, local_Ar);
     }
+    if (content.contains("arr"))
+    {
+        FArchive local_Ar(content["arr"], Ar);
+        TStaticSerializer<std::array<Enum, 10>>::Deserialize(this->arr, local_Ar);
+    }
     if (content.contains("base"))
     {
         FArchive local_Ar(content["base"], Ar);
         TStaticSerializer<nilou::Base *>::Deserialize(this->base, local_Ar);
     }
-    if (content.contains("e"))
+    if (content.contains("m"))
     {
-        FArchive local_Ar(content["e"], Ar);
-        TStaticSerializer<std::vector<Enum>>::Deserialize(this->e, local_Ar);
+        FArchive local_Ar(content["m"], Ar);
+        TStaticSerializer<std::map<int, int>>::Deserialize(this->m, local_Ar);
+    }
+    if (content.contains("s"))
+    {
+        FArchive local_Ar(content["s"], Ar);
+        TStaticSerializer<std::set<int>>::Deserialize(this->s, local_Ar);
     }
     if (content.contains("vec"))
     {

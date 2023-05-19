@@ -3,21 +3,23 @@
 #include "Test.h"
 using namespace nilou;
 
-struct X {
-     int serialize(const std::string&) { return 42; } 
-     void serialize(FArchive&) { }
-};
 
 int main()
 {
-    bool aaa = HasMethodSerialize<nilou::MyStruct, void(FArchive&)>::value;
     {
         nlohmann::json root;
         std::vector<FArchiveBuffer> Buffers;
         FArchive Ar(root, Buffers);
         Derived* derived = new Derived;
         derived->BaseField = 1;
-        derived->my_struct = MyStruct{{1}, 2, derived};
+        MyStruct s;
+        s.vec.push_back(54);
+        s.a = 222;
+        s.arr[0] = Enum::E1;
+        s.m[42] = 100;
+        s.s.insert(42);
+        s.base = nullptr;
+        derived->my_struct = s;
         derived->DerivedField = "123456";
         FBinaryBuffer& Buffer = derived->Buffer.emplace_back();
         Buffer.Buffer = std::make_shared<unsigned char[]>(10);

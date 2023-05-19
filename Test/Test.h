@@ -21,16 +21,22 @@ struct NSTRUCT MyStruct
     GENERATED_STRUCT_BODY()
 
     NPROPERTY()
+    std::map<int, int> m;
+
+    NPROPERTY()
+    std::set<int> s;
+
+    NPROPERTY()
     std::vector<float> vec;
+
+    NPROPERTY()
+    std::array<Enum, 10> arr;
 
     NPROPERTY()
     int a = 1;
 
     NPROPERTY()
     Base* base;
-
-    NPROPERTY()
-    std::vector<Enum> e;
 
 };
 

@@ -58,9 +58,6 @@ void nilou::Derived::Serialize(FArchive& Ar)
 
 void nilou::Derived::Deserialize(FArchive& Ar)
 {
-    if (this->bIsSerializing)
-        return;
-    this->bIsSerializing = true;
     nlohmann::json& Node = Ar.Node;
     nlohmann::json &content = Node["Content"];
 
@@ -75,5 +72,4 @@ void nilou::Derived::Deserialize(FArchive& Ar)
         TStaticSerializer<std::string>::Deserialize(this->DerivedField, local_Ar);
     }
     nilou::Base::Deserialize(Ar);
-    this->bIsSerializing = false;
 }

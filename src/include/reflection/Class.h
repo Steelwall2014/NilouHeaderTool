@@ -224,48 +224,76 @@ inline NObject* CreateDefaultObject(const std::string& TypeName)
     return nullptr;
 }
 
-template<typename, typename T>
-struct HasMethodSerialize
-{
-    static_assert(
-        std::integral_constant<T, false>::value,
-        "Second template parameter needs to be of function type.");
+/** Older solution */
+// template<typename, typename T>
+// struct HasMethodSerialize
+// {
+//     static_assert(
+//         std::integral_constant<T, false>::value,
+//         "Second template parameter needs to be of function type.");
+// };
+
+// template<typename T, typename TReturn, typename ...TArgs>
+// struct HasMethodSerialize<T, TReturn(TArgs...)>
+// {
+// private:
+//     template<typename U>
+//     static constexpr auto Check(int) 
+//         -> typename std::is_same<decltype(std::declval<U>().Serialize(std::declval<TArgs>()...)), TReturn>::type;
+//     template<typename U>
+//     static constexpr std::false_type Check(...);
+//     typedef decltype(Check<T>(0)) type;
+// public:
+//     static constexpr bool value = std::is_same<type, std::true_type>::value;
+// };
+
+// template<typename, typename T>
+// struct HasMethodDeserialize
+// {
+//     static_assert(
+//         std::integral_constant<T, false>::value,
+//         "Second template parameter needs to be of function type.");
+// };
+
+// template<typename T, typename TReturn, typename ...TArgs>
+// struct HasMethodDeserialize<T, TReturn(TArgs...)>
+// {
+// private:
+//     template<typename U>
+//     static constexpr auto Check(int) 
+//         -> typename std::is_same<decltype(std::declval<U>().Deserialize(std::declval<TArgs>()...)), TReturn>::type;
+//     template<typename U>
+//     static constexpr std::false_type Check(...);
+//     typedef decltype(Check<T>(0)) type;
+// public:
+//     static constexpr bool value = std::is_same<type, std::true_type>::value;
+// };
+
+/** C++ 20 solution */
+template<typename T, typename TReturn, typename ...TArgs>
+concept HasMethodSerialize = requires {
+    { std::declval<T>().Serialize(std::declval<TArgs>()...) } -> std::same_as<TReturn>;
 };
 
 template<typename T, typename TReturn, typename ...TArgs>
-struct HasMethodSerialize<T, TReturn(TArgs...)>
-{
-private:
-    template<typename U>
-    static constexpr auto Check(int) 
-        -> typename std::is_same<decltype(std::declval<U>().Serialize(std::declval<TArgs>()...)), TReturn>::type;
-    template<typename U>
-    static constexpr std::false_type Check(...);
-    typedef decltype(Check<T>(0)) type;
-public:
-    static constexpr bool value = std::is_same<type, std::true_type>::value;
+concept HasMethodDeserialize = requires {
+    { std::declval<T>().Deserialize(std::declval<TArgs>()...) } -> std::same_as<TReturn>;
 };
 
-template<typename, typename T>
-struct HasMethodDeserialize
-{
-    static_assert(
-        std::integral_constant<T, false>::value,
-        "Second template parameter needs to be of function type.");
+template<class T>
+concept IsMapType = std::same_as<typename T::value_type, std::pair<const typename T::key_type, typename T::mapped_type>>;
+
+template<class T>
+concept IsSetType = std::same_as<typename T::value_type, typename T::key_type>;
+
+template<class T>
+concept IsRangeContainerType = requires {
+    { std::declval<T>().data() } -> std::same_as<typename T::value_type *>;
 };
 
-template<typename T, typename TReturn, typename ...TArgs>
-struct HasMethodDeserialize<T, TReturn(TArgs...)>
-{
-private:
-    template<typename U>
-    static constexpr auto Check(int) 
-        -> typename std::is_same<decltype(std::declval<U>().Deserialize(std::declval<TArgs>()...)), TReturn>::type;
-    template<typename U>
-    static constexpr std::false_type Check(...);
-    typedef decltype(Check<T>(0)) type;
-public:
-    static constexpr bool value = std::is_same<type, std::true_type>::value;
+template<class T>
+concept HasMethodResize = requires {
+    { std::declval<T>().resize(1) } -> std::same_as<void>;
 };
 
 template<typename T>
@@ -277,43 +305,108 @@ public:
     { 
         if constexpr (std::is_enum_v<RawT>)
             Ar.Node = magic_enum::enum_name(Object);
-        else if constexpr (HasMethodSerialize<RawT, void(FArchive&)>::value)
+        else if constexpr (HasMethodSerialize<RawT, void, FArchive&>)
             Object.Serialize(Ar);
-        else
+        else if constexpr (IsMapType<T>)
+        {
+            for (auto &[ckey, value] : Object)
+            {
+                typename T::key_type key = ckey;
+                nlohmann::json& Node = Ar.Node.emplace_back();
+                FArchive local_Ar_key(Node["key"], Ar);
+                TStaticSerializer<typename T::key_type>::Serialize(key, local_Ar_key);
+                FArchive local_Ar_value(Node["value"], Ar);
+                TStaticSerializer<typename T::mapped_type>::Serialize(value, local_Ar_value);
+            }
+        }
+        else if constexpr (IsRangeContainerType<T>)
+        {
+            for (int i = 0; i < Object.size(); i++)
+            {
+                nlohmann::json& Node = Ar.Node.emplace_back();
+                FArchive local_Ar(Node, Ar);
+                TStaticSerializer<typename T::value_type>::Serialize(Object[i], local_Ar);
+            }
+        }
+        else if constexpr (IsSetType<T>)
+        {
+            for (auto& cvalue : Object)
+            {
+                using TValue = typename T::value_type;
+                TValue value = cvalue;
+                nlohmann::json& Node = Ar.Node.emplace_back();
+                FArchive local_Ar(Node, Ar);
+                TStaticSerializer<TValue>::Serialize(value, local_Ar);
+            }
+        }
+        else 
+        {
             Ar.Node = Object;
+        }
     }
     static void Deserialize(RawT &Object, FArchive& Ar) 
     { 
         if constexpr (std::is_enum_v<RawT>)
-            Object = magic_enum::enum_cast<RawT>(Ar.Node.get<std::string>()).value();
-        else if constexpr (HasMethodDeserialize<RawT, void(FArchive&)>::value)
-            Object.Deserialize(Ar);
-        else
-            Object = Ar.Node.get<RawT>();
-    }
-};
-
-template<typename T>
-class TStaticSerializer<std::vector<T>>
-{
-    using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
-public:
-    static void Serialize(std::vector<RawT> &Object, FArchive& Ar) 
-    { 
-        for (int i = 0; i < Object.size(); i++)
         {
-            nlohmann::json& Node = Ar.Node.emplace_back();
-            FArchive local_Ar(Node, Ar);
-            TStaticSerializer<RawT>::Serialize(Object[i], local_Ar);
+            auto opt = magic_enum::enum_cast<RawT>(Ar.Node.get<std::string>());
+            if (opt)
+                Object = opt.value();
         }
-    }
-    static void Deserialize(std::vector<RawT> &Object, FArchive& Ar) 
-    { 
-        Object.resize(Ar.Node.size());
-        for (int i = 0; i < Object.size(); i++)
+        else if constexpr (HasMethodDeserialize<RawT, void, FArchive&>)
+            Object.Deserialize(Ar);
+        else if constexpr (IsMapType<T>)
         {
-            FArchive local_Ar(Ar.Node[i], Ar);
-            TStaticSerializer<RawT>::Deserialize(Object[i], local_Ar);
+            if (Ar.Node.is_array())
+            {
+                for (int i = 0; i < Ar.Node.size(); i++)
+                {
+                    nlohmann::json& Node = Ar.Node[i];
+                    if (Node.contains("key") && Node.contains("value"))
+                    {
+                        using TKey = typename T::key_type;
+                        using TValue = typename T::mapped_type;
+                        std::unique_ptr<TKey> key = std::make_unique<TKey>();
+                        std::unique_ptr<TValue> value = std::make_unique<TValue>();
+                        FArchive local_Ar_key(Node["key"], Ar);
+                        TStaticSerializer<TKey>::Deserialize(*key, local_Ar_key);
+                        FArchive local_Ar_value(Node["value"], Ar);
+                        TStaticSerializer<TValue>::Deserialize(*value, local_Ar_value);
+                        Object[*key] = *value;
+                    }
+                }
+            }
+        }
+        else if constexpr (IsRangeContainerType<T>)
+        {
+            if (Ar.Node.is_array())
+            {
+                if constexpr (HasMethodResize<T>)
+                    Object.resize(Ar.Node.size());
+                for (int i = 0; i < Object.size(); i++)
+                {
+                    FArchive local_Ar(Ar.Node[i], Ar);
+                    TStaticSerializer<typename T::value_type>::Deserialize(Object[i], local_Ar);
+                }
+            }
+        }
+        else if constexpr (IsSetType<T>)
+        {
+            if (Ar.Node.is_array())
+            {
+                for (int i = 0; i < Ar.Node.size(); i++)
+                {
+                    using TKey = typename T::key_type;
+                    nlohmann::json& Node = Ar.Node[i];
+                    std::unique_ptr<TKey> pkey = std::make_unique<TKey>();
+                    FArchive local_Ar(Node, Ar);
+                    TStaticSerializer<TKey>::Deserialize(*pkey, local_Ar);
+                    Object.insert(*pkey);
+                }
+            }
+        }
+        else
+        {
+            Object = Ar.Node.get<RawT>();
         }
     }
 };
