@@ -168,6 +168,8 @@ bool IsNStructOrBuiltin(CXType Type)
         "umat2",
         "umat3",
         "umat4",
+        "quat",
+        "dquat",
         "std::string",
         "FBinaryBuffer"
     };
