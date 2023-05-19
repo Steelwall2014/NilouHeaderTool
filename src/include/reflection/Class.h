@@ -4,6 +4,7 @@
 #include <UDRefl/UDRefl.hpp>
 #include <json/json.hpp>
 #include "Macros.h"
+#include <magic_enum.hpp>
 
 
 template<typename T>
@@ -223,15 +224,61 @@ inline NObject* CreateDefaultObject(const std::string& TypeName)
     return nullptr;
 }
 
+template<typename, typename T>
+struct HasMethodSerialize
+{
+    static_assert(
+        std::integral_constant<T, false>::value,
+        "Second template parameter needs to be of function type.");
+};
+
+template<typename T, typename TReturn, typename ...TArgs>
+struct HasMethodSerialize<T, TReturn(TArgs...)>
+{
+private:
+    template<typename U>
+    static constexpr auto Check(int) 
+        -> typename std::is_same<decltype(std::declval<U>().Serialize(std::declval<TArgs>()...)), TReturn>::type;
+    template<typename U>
+    static constexpr std::false_type Check(...);
+    typedef decltype(Check<T>(0)) type;
+public:
+    static constexpr bool value = std::is_same<type, std::true_type>::value;
+};
+
+template<typename, typename T>
+struct HasMethodDeserialize
+{
+    static_assert(
+        std::integral_constant<T, false>::value,
+        "Second template parameter needs to be of function type.");
+};
+
+template<typename T, typename TReturn, typename ...TArgs>
+struct HasMethodDeserialize<T, TReturn(TArgs...)>
+{
+private:
+    template<typename U>
+    static constexpr auto Check(int) 
+        -> typename std::is_same<decltype(std::declval<U>().Deserialize(std::declval<TArgs>()...)), TReturn>::type;
+    template<typename U>
+    static constexpr std::false_type Check(...);
+    typedef decltype(Check<T>(0)) type;
+public:
+    static constexpr bool value = std::is_same<type, std::true_type>::value;
+};
+
 template<typename T>
 class TStaticSerializer
 {
     using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
 public:
-    static void Serialize(const RawT &Object, FArchive& Ar) 
+    static void Serialize(RawT &Object, FArchive& Ar) 
     { 
         if constexpr (std::is_enum_v<RawT>)
             Ar.Node = magic_enum::enum_name(Object);
+        else if constexpr (HasMethodSerialize<RawT, void(FArchive&)>::value)
+            Object.Serialize(Ar);
         else
             Ar.Node = Object;
     }
@@ -239,8 +286,10 @@ public:
     { 
         if constexpr (std::is_enum_v<RawT>)
             Object = magic_enum::enum_cast<RawT>(Ar.Node.get<std::string>()).value();
+        else if constexpr (HasMethodDeserialize<RawT, void(FArchive&)>::value)
+            Object.Deserialize(Ar);
         else
-            Object = Ar.Node.get<T>();
+            Object = Ar.Node.get<RawT>();
     }
 };
 
@@ -249,7 +298,7 @@ class TStaticSerializer<std::vector<T>>
 {
     using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
 public:
-    static void Serialize(const std::vector<RawT> &Object, FArchive& Ar) 
+    static void Serialize(std::vector<RawT> &Object, FArchive& Ar) 
     { 
         for (int i = 0; i < Object.size(); i++)
         {
@@ -321,7 +370,7 @@ template<>
 class TStaticSerializer<FBinaryBuffer>
 {
 public:
-    static void Serialize(const FBinaryBuffer &Object, FArchive& Ar) 
+    static void Serialize(FBinaryBuffer &Object, FArchive& Ar) 
     { 
         if (Object.BufferSize && Object.Buffer)
         {

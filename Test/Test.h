@@ -16,11 +16,9 @@ enum class Enum
     E2
 };
 
-class NSTRUCT MyStruct
+struct NSTRUCT MyStruct
 {
     GENERATED_STRUCT_BODY()
-
-public:
 
     NPROPERTY()
     std::vector<float> vec;

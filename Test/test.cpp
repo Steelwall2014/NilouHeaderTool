@@ -3,9 +3,14 @@
 #include "Test.h"
 using namespace nilou;
 
+struct X {
+     int serialize(const std::string&) { return 42; } 
+     void serialize(FArchive&) { }
+};
 
 int main()
 {
+    bool aaa = HasMethodSerialize<nilou::MyStruct, void(FArchive&)>::value;
     {
         nlohmann::json root;
         std::vector<FArchiveBuffer> Buffers;
@@ -21,6 +26,7 @@ int main()
             Buffer.Buffer.get()[i] = 'a'+i;
         }
         Buffer.BufferSize = 10;
+        derived->my_structs.push_back(derived->my_struct);
         derived->Serialize(Ar);
         std::ofstream out("test.nasset", std::ios::binary);
         out << Ar;
