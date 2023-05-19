@@ -5,6 +5,15 @@ build/
 .cache/
 .deprecated/
 compile_commands.json
+Test/
+External/include/UDRefl/
+External/include/UDRefl_ext/
+External/include/USmallFlat/
+External/include/UTemplate/
+External/include/UTemplate/
+External/include/glm/
+External/include/json/
+External/lib/UDRefl_core.lib
 
 # MacOS Cache
 .DS_Store
