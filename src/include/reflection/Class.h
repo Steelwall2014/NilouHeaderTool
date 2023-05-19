@@ -230,11 +230,17 @@ class TStaticSerializer
 public:
     static void Serialize(const RawT &Object, FArchive& Ar) 
     { 
-        Ar.Node = Object;
+        if constexpr (std::is_enum_v<RawT>)
+            Ar.Node = magic_enum::enum_name(Object);
+        else
+            Ar.Node = Object;
     }
     static void Deserialize(RawT &Object, FArchive& Ar) 
     { 
-        Object = Ar.Node.get<T>();
+        if constexpr (std::is_enum_v<RawT>)
+            Object = magic_enum::enum_cast<RawT>(Ar.Node.get<std::string>()).value();
+        else
+            Object = Ar.Node.get<T>();
     }
 };
 

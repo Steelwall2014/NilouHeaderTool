@@ -23,6 +23,7 @@ struct TClassRegistry<nilou::MyStruct>
         Mngr.RegisterType<nilou::MyStruct>();
 		Mngr.AddField<&nilou::MyStruct::a>("a");
 		Mngr.AddField<&nilou::MyStruct::base>("base");
+		Mngr.AddField<&nilou::MyStruct::e>("e");
 		Mngr.AddField<&nilou::MyStruct::vec>("vec");
 ;
         nilou::MyStruct::StaticClass_->Type = Type_of<nilou::MyStruct>;
@@ -49,6 +50,10 @@ void nilou::MyStruct::Serialize(FArchive& Ar)
         TStaticSerializer<nilou::Base *>::Serialize(this->base, local_Ar);
     }
     {
+        FArchive local_Ar(content["e"], Ar);
+        TStaticSerializer<std::vector<Enum>>::Serialize(this->e, local_Ar);
+    }
+    {
         FArchive local_Ar(content["vec"], Ar);
         TStaticSerializer<std::vector<float>>::Serialize(this->vec, local_Ar);
     }
@@ -67,6 +72,11 @@ void nilou::MyStruct::Deserialize(FArchive& Ar)
     {
         FArchive local_Ar(content["base"], Ar);
         TStaticSerializer<nilou::Base *>::Deserialize(this->base, local_Ar);
+    }
+    if (content.contains("e"))
+    {
+        FArchive local_Ar(content["e"], Ar);
+        TStaticSerializer<std::vector<Enum>>::Deserialize(this->e, local_Ar);
     }
     if (content.contains("vec"))
     {

@@ -9,6 +9,13 @@
 
 namespace nilou {
 class Base;
+
+enum class Enum
+{
+    E1,
+    E2
+};
+
 class NSTRUCT MyStruct
 {
     GENERATED_STRUCT_BODY()
@@ -23,6 +30,9 @@ public:
 
     NPROPERTY()
     Base* base;
+
+    NPROPERTY()
+    std::vector<Enum> e;
 
 };
 
@@ -42,6 +52,9 @@ public:
 
     NPROPERTY()
     MyStruct my_struct;
+
+    NPROPERTY()
+    std::vector<MyStruct> my_structs;
 
     NPROPERTY()
     std::shared_ptr<Derived> ref;

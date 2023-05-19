@@ -23,6 +23,7 @@ struct TClassRegistry<nilou::Base>
         Mngr.RegisterType<nilou::Base>();
 		Mngr.AddField<&nilou::Base::BaseField>("BaseField");
 		Mngr.AddField<&nilou::Base::my_struct>("my_struct");
+		Mngr.AddField<&nilou::Base::my_structs>("my_structs");
 		Mngr.AddField<&nilou::Base::ref>("ref");
 		Mngr.AddMethod<&nilou::Base::foo>("foo");
 		Mngr.AddBases<nilou::Base, NObject>();
@@ -56,6 +57,10 @@ void nilou::Base::Serialize(FArchive& Ar)
         this->my_struct.Serialize(local_Ar);
     }
     {
+        FArchive local_Ar(content["my_structs"], Ar);
+        TStaticSerializer<std::vector<MyStruct>>::Serialize(this->my_structs, local_Ar);
+    }
+    {
         FArchive local_Ar(content["ref"], Ar);
         TStaticSerializer<std::shared_ptr<Derived>>::Serialize(this->ref, local_Ar);
     }
@@ -79,6 +84,11 @@ void nilou::Base::Deserialize(FArchive& Ar)
     {
         FArchive local_Ar(content["my_struct"], Ar);
         this->my_struct.Deserialize(local_Ar);
+    }
+    if (content.contains("my_structs"))
+    {
+        FArchive local_Ar(content["my_structs"], Ar);
+        TStaticSerializer<std::vector<MyStruct>>::Deserialize(this->my_structs, local_Ar);
     }
     if (content.contains("ref"))
     {

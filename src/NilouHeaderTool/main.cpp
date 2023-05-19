@@ -98,75 +98,29 @@ bool IsReflectedClass(const string& TypeName)
     return NTypes.contains(TypeName) && NTypes[TypeName].MetaType == "class";
 }
 
-bool IsNClassPtr(const string& T)
+bool IsReflectedType(const std::string& TypeName)
 {
-    bool is_ptr = T.find("*") != -1;
-    string raw_T = regex_replace(T, regex("(const )| \\*|\\* "), "");
-    if (is_ptr && NTypes.contains(raw_T))
-        return true;
-    return false;
+    return NTypes.contains(TypeName);
 }
 
-bool IsNClassSmartPtr(const string& T)
+bool IsNClassPtr(CXType Type)
 {
-    regex ptr_re(R"(std::shared_ptr<(.+)>)");
-    smatch match;
-    if (regex_match(T, match, ptr_re) && NTypes.contains(match[1].str()))
-    {
-        return true;
-    }
-    return false;
+    CXType pointee = clang_getPointeeType(Type);
+    return IsReflectedClass(GetClangString(clang_getTypeSpelling(pointee)));
 }
 
-bool IsNClassPtr(CXCursor c)
+bool IsNClassSmartPtr(CXType Type)
 {
-    string TypeName = GetCursorTypeSpelling(c);
-    bool is_reflected_class = false;
-    if (TypeName.find("*") != -1)
-    {
-        clang_visitChildren(
-            c,
-            [](CXCursor c, CXCursor parent, CXClientData client_data)
-            {
-                if (clang_getCursorKind(c) == CXCursorKind::CXCursor_TypeRef)
-                {
-                    string s = GetCursorSpelling(c);
-                    s = regex_replace(s, regex("class "), "");
-                    *(bool*)client_data = IsReflectedClass(s);
-                    return CXChildVisit_Break;
-                }
-                return CXChildVisit_Recurse;
-            },
-            &is_reflected_class);
-    }
-    return is_reflected_class;
+    CXType pointee = clang_Type_getTemplateArgumentAsType(Type, 0);
+    return IsReflectedClass(GetClangString(clang_getTypeSpelling(pointee)));
 }
 
-bool IsNClassSmartPtr(CXCursor c)
+bool IsEnum(CXType Type)
 {
-    string TypeName = GetCursorTypeSpelling(c);
-    bool is_reflected_class = false;
-    if (regex_search(TypeName, regex(R"(std::shared_ptr<.+>)")))
-    {
-        clang_visitChildren(
-            c,
-            [](CXCursor c, CXCursor parent, CXClientData client_data)
-            {
-                if (clang_getCursorKind(c) == CXCursorKind::CXCursor_TypeRef)
-                {
-                    string s = GetCursorSpelling(c);
-                    s = regex_replace(s, regex("class "), "");
-                    *(bool*)client_data = IsReflectedClass(s);
-                    return CXChildVisit_Break;
-                }
-                return CXChildVisit_Recurse;
-            },
-            &is_reflected_class);
-    }
-    return is_reflected_class;
+    return Type.kind == CXTypeKind::CXType_Enum;
 }
 
-bool IsNStructOrBuiltin(CXCursor c)
+bool IsNStructOrBuiltin(CXType Type)
 {
     static set<string> built_ins = {
         "int8",
@@ -216,45 +170,24 @@ bool IsNStructOrBuiltin(CXCursor c)
         "std::string",
         "FBinaryBuffer"
     };
-    string TypeName = GetCursorTypeSpelling(c);
-    if (built_ins.contains(TypeName) || IsReflectedStruct(TypeName))
+    string TypeName = GetClangString(clang_getTypeSpelling(Type));
+    if (built_ins.contains(TypeName) || IsReflectedStruct(TypeName) || IsEnum(Type))
         return true;
     return false;
 }
 
-bool IsSupportedContainer(CXCursor c)
+bool IsSupportedContainer(CXType Type)
 {
-    string TypeName = GetCursorTypeSpelling(c);
-    bool is_supported_container = true;
-    if (regex_search(TypeName, regex(R"(std::(vector|map|set|unordered_map|unordered_set)<(.+)>)")))
+    int num = clang_Type_getNumTemplateArguments(Type);
+    if (num == 0)
+        return false;
+    for (int i = 0; i < num; i++)
     {
-        clang_visitChildren(
-            c,
-            [](CXCursor c, CXCursor parent, CXClientData client_data)
-            {
-                string kind = GetCursorKindSpelling(c);
-                string s = GetCursorSpelling(c);
-                if (clang_getCursorKind(c) == CXCursorKind::CXCursor_TypeRef)
-                {
-                    if (!IsNStructOrBuiltin(c) && !IsNClassPtr(c) && !IsNClassSmartPtr(c))
-                        *(bool*)client_data = false;
-                }
-                return CXChildVisit_Recurse;
-            },
-            &is_supported_container);
+        CXType T = clang_Type_getTemplateArgumentAsType(Type, i);
+        if (!IsNStructOrBuiltin(T) && !IsNClassPtr(T) && !IsNClassSmartPtr(T))
+            return false;
     }
-    return is_supported_container;
-}
-
-string GetSmartPtrRawType(const string& T)
-{
-    regex ptr_re(R"(std::shared_ptr<(.+)>)");
-    smatch match;
-    if (regex_match(T, match, ptr_re))
-    {
-        return match[1].str();
-    }
-    return "";
+    return true;
 }
 
 string GetRawType(const string& T)
@@ -264,55 +197,17 @@ string GetRawType(const string& T)
     return raw_T;
 }
 
-bool IsSupportedType(const std::string& TypeName)
+bool IsSupportedType(CXType Type)
 {
-    if (IsNClassPtr(TypeName))
+    if (IsNStructOrBuiltin(Type))
         return true;
-    if (IsNClassSmartPtr(TypeName))
+    if (IsNClassPtr(Type))
         return true;
-    regex stl_re(R"(std::(vector|map|set|unordered_map|unordered_set)<(.+)>)");
-    smatch match;
-    if (regex_match(TypeName, match, stl_re))
-    {
-        vector<string> Ts = Split(match[2].str(), ',');
-        for (auto& T : Ts)
-        {
-            if (!IsSupportedType(T))
-                return false;
-            // bool is_ptr = T.find("*") != -1;
-            // string raw_T = regex_replace(T, regex("(const )|\\*"), "");
-            // if (is_ptr)
-            // {
-            //     if (!NTypes.contains(raw_T))
-            //         return false;
-            // }
-            // else 
-            // {
-            //     if (!IsReflectedStruct(raw_T) && !built_ins.contains(raw_T))
-            //         return false;
-            // }
-        }
+    if (IsNClassSmartPtr(Type))
         return true;
-    }
-    return false;
-}
-
-bool IsSupportedType(CXCursor c)
-{
-    if (IsSupportedContainer(c))
-        return true;
-    if (IsNStructOrBuiltin(c))
-        return true;
-    if (IsNClassPtr(c))
-        return true;
-    if (IsNClassSmartPtr(c))
+    if (IsSupportedContainer(Type))
         return true;
     return false;
-}
-
-bool IsReflectedType(const std::string& TypeName)
-{
-    return NTypes.contains(TypeName);
 }
 
 bool NeedsReflection(string filepath)
@@ -430,7 +325,7 @@ void ParseHeaderFile(string filepath)
                         string class_name = fully_qualified(class_cursor);
                         string field_name = GetCursorSpelling(parent);
                         string field_type = GetCursorTypeSpelling(parent);
-                        if (IsReflectedType(class_name) && IsSupportedType(parent))
+                        if (IsReflectedType(class_name) && IsSupportedType(clang_getCursorType(parent)))
                         {
                             auto& Fields = NTypes[class_name].Fields;
                             Fields[field_name] = field_type;

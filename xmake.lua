@@ -1,4 +1,5 @@
 add_rules("mode.debug", "mode.release")
+add_requires("vcpkg::magic-enum")
 
 function copyFunc(target)
     if is_plat("windows") then
@@ -34,6 +35,7 @@ target("Test")
     set_runtimes("MD")
     add_cxxflags("/bigobj")
     add_links("./External/lib/*")
+    add_packages("vcpkg::magic-enum")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
