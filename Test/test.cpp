@@ -15,7 +15,7 @@ int main()
         MyStruct s;
         s.vec.push_back(54);
         s.a = 222;
-        s.arr[0] = Enum::E1;
+        s.arr[0] = Enum::E2;
         s.m[42] = 100;
         s.s.insert(42);
         s.base = nullptr;

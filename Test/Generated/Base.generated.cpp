@@ -50,7 +50,7 @@ void nilou::Base::Serialize(FArchive& Ar)
 
     {
         FArchive local_Ar(content["BaseField"], Ar);
-        TStaticSerializer<int>::Serialize(this->BaseField, local_Ar);
+        TStaticSerializer<decltype(this->BaseField)>::Serialize(this->BaseField, local_Ar);
     }
     {
         FArchive local_Ar(content["my_struct"], Ar);
@@ -58,11 +58,11 @@ void nilou::Base::Serialize(FArchive& Ar)
     }
     {
         FArchive local_Ar(content["my_structs"], Ar);
-        TStaticSerializer<std::vector<MyStruct>>::Serialize(this->my_structs, local_Ar);
+        TStaticSerializer<decltype(this->my_structs)>::Serialize(this->my_structs, local_Ar);
     }
     {
         FArchive local_Ar(content["ref"], Ar);
-        TStaticSerializer<std::shared_ptr<Derived>>::Serialize(this->ref, local_Ar);
+        TStaticSerializer<decltype(this->ref)>::Serialize(this->ref, local_Ar);
     }
     this->bIsSerializing = false;
 }
@@ -75,7 +75,7 @@ void nilou::Base::Deserialize(FArchive& Ar)
     if (content.contains("BaseField"))
     {
         FArchive local_Ar(content["BaseField"], Ar);
-        TStaticSerializer<int>::Deserialize(this->BaseField, local_Ar);
+        TStaticSerializer<decltype(this->BaseField)>::Deserialize(this->BaseField, local_Ar);
     }
     if (content.contains("my_struct"))
     {
@@ -85,12 +85,12 @@ void nilou::Base::Deserialize(FArchive& Ar)
     if (content.contains("my_structs"))
     {
         FArchive local_Ar(content["my_structs"], Ar);
-        TStaticSerializer<std::vector<MyStruct>>::Deserialize(this->my_structs, local_Ar);
+        TStaticSerializer<decltype(this->my_structs)>::Deserialize(this->my_structs, local_Ar);
     }
     if (content.contains("ref"))
     {
         FArchive local_Ar(content["ref"], Ar);
-        TStaticSerializer<std::shared_ptr<Derived>>::Deserialize(this->ref, local_Ar);
+        TStaticSerializer<decltype(this->ref)>::Deserialize(this->ref, local_Ar);
     }
     NObject::Deserialize(Ar);
 }

@@ -47,11 +47,11 @@ void nilou::Derived::Serialize(FArchive& Ar)
 
     {
         FArchive local_Ar(content["Buffer"], Ar);
-        TStaticSerializer<std::vector<FBinaryBuffer>>::Serialize(this->Buffer, local_Ar);
+        TStaticSerializer<decltype(this->Buffer)>::Serialize(this->Buffer, local_Ar);
     }
     {
         FArchive local_Ar(content["DerivedField"], Ar);
-        TStaticSerializer<std::string>::Serialize(this->DerivedField, local_Ar);
+        TStaticSerializer<decltype(this->DerivedField)>::Serialize(this->DerivedField, local_Ar);
     }
     this->bIsSerializing = false;
 }
@@ -64,12 +64,12 @@ void nilou::Derived::Deserialize(FArchive& Ar)
     if (content.contains("Buffer"))
     {
         FArchive local_Ar(content["Buffer"], Ar);
-        TStaticSerializer<std::vector<FBinaryBuffer>>::Deserialize(this->Buffer, local_Ar);
+        TStaticSerializer<decltype(this->Buffer)>::Deserialize(this->Buffer, local_Ar);
     }
     if (content.contains("DerivedField"))
     {
         FArchive local_Ar(content["DerivedField"], Ar);
-        TStaticSerializer<std::string>::Deserialize(this->DerivedField, local_Ar);
+        TStaticSerializer<decltype(this->DerivedField)>::Deserialize(this->DerivedField, local_Ar);
     }
     nilou::Base::Deserialize(Ar);
 }

@@ -45,27 +45,27 @@ void nilou::MyStruct::Serialize(FArchive& Ar)
 
     {
         FArchive local_Ar(content["a"], Ar);
-        TStaticSerializer<int>::Serialize(this->a, local_Ar);
+        TStaticSerializer<decltype(this->a)>::Serialize(this->a, local_Ar);
     }
     {
         FArchive local_Ar(content["arr"], Ar);
-        TStaticSerializer<std::array<Enum, 10>>::Serialize(this->arr, local_Ar);
+        TStaticSerializer<decltype(this->arr)>::Serialize(this->arr, local_Ar);
     }
     {
         FArchive local_Ar(content["base"], Ar);
-        TStaticSerializer<nilou::Base *>::Serialize(this->base, local_Ar);
+        TStaticSerializer<decltype(this->base)>::Serialize(this->base, local_Ar);
     }
     {
         FArchive local_Ar(content["m"], Ar);
-        TStaticSerializer<std::map<int, int>>::Serialize(this->m, local_Ar);
+        TStaticSerializer<decltype(this->m)>::Serialize(this->m, local_Ar);
     }
     {
         FArchive local_Ar(content["s"], Ar);
-        TStaticSerializer<std::set<int>>::Serialize(this->s, local_Ar);
+        TStaticSerializer<decltype(this->s)>::Serialize(this->s, local_Ar);
     }
     {
         FArchive local_Ar(content["vec"], Ar);
-        TStaticSerializer<std::vector<float>>::Serialize(this->vec, local_Ar);
+        TStaticSerializer<decltype(this->vec)>::Serialize(this->vec, local_Ar);
     }
 }
 
@@ -76,32 +76,32 @@ void nilou::MyStruct::Deserialize(FArchive& Ar)
     if (content.contains("a"))
     {
         FArchive local_Ar(content["a"], Ar);
-        TStaticSerializer<int>::Deserialize(this->a, local_Ar);
+        TStaticSerializer<decltype(this->a)>::Deserialize(this->a, local_Ar);
     }
     if (content.contains("arr"))
     {
         FArchive local_Ar(content["arr"], Ar);
-        TStaticSerializer<std::array<Enum, 10>>::Deserialize(this->arr, local_Ar);
+        TStaticSerializer<decltype(this->arr)>::Deserialize(this->arr, local_Ar);
     }
     if (content.contains("base"))
     {
         FArchive local_Ar(content["base"], Ar);
-        TStaticSerializer<nilou::Base *>::Deserialize(this->base, local_Ar);
+        TStaticSerializer<decltype(this->base)>::Deserialize(this->base, local_Ar);
     }
     if (content.contains("m"))
     {
         FArchive local_Ar(content["m"], Ar);
-        TStaticSerializer<std::map<int, int>>::Deserialize(this->m, local_Ar);
+        TStaticSerializer<decltype(this->m)>::Deserialize(this->m, local_Ar);
     }
     if (content.contains("s"))
     {
         FArchive local_Ar(content["s"], Ar);
-        TStaticSerializer<std::set<int>>::Deserialize(this->s, local_Ar);
+        TStaticSerializer<decltype(this->s)>::Deserialize(this->s, local_Ar);
     }
     if (content.contains("vec"))
     {
         FArchive local_Ar(content["vec"], Ar);
-        TStaticSerializer<std::vector<float>>::Deserialize(this->vec, local_Ar);
+        TStaticSerializer<decltype(this->vec)>::Deserialize(this->vec, local_Ar);
     }
     
 }

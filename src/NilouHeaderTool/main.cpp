@@ -123,6 +123,7 @@ bool IsEnum(CXType Type)
 bool IsNStructOrBuiltin(CXType Type)
 {
     static set<string> built_ins = {
+        "bool",
         "int8",
         "int16",
         "int32",
@@ -340,10 +341,17 @@ void ParseHeaderFile(string filepath)
                         string class_name = fully_qualified(class_cursor);
                         string field_name = GetCursorSpelling(parent);
                         string field_type = GetCursorTypeSpelling(parent);
-                        if (IsReflectedType(class_name) && IsSupportedType(clang_getCursorType(parent)))
+                        if (IsReflectedType(class_name))
                         {
-                            auto& Fields = NTypes[class_name].Fields;
-                            Fields[field_name] = field_type;
+                            if (IsSupportedType(clang_getCursorType(parent)))
+                            {
+                                auto& Fields = NTypes[class_name].Fields;
+                                Fields[field_name] = field_type;
+                            }
+                            else 
+                            {
+                                cout << format("Unsupported type: {} {}\n", field_type, field_name);
+                            }
                         }
                     }
                     else if (cursor_spelling == "reflect-method")
@@ -352,7 +360,7 @@ void ParseHeaderFile(string filepath)
                         string class_name = fully_qualified(class_cursor);
                         string method_name = GetCursorSpelling(parent);
                         string method_args = GetCursorTypeSpelling(parent);
-                        if (NTypes.contains(class_name))
+                        if (IsReflectedType(class_name))
                         {
                             auto& Methods = NTypes[class_name].Methods;
                             Methods.insert(method_name);
@@ -467,14 +475,14 @@ pair<string, string> GenerateSerializeBody(const string& FieldName, const string
         SerializeBody += format(R"(
     {{
         FArchive local_Ar(content["{0}"], Ar);
-        TStaticSerializer<{1}>::Serialize(this->{0}, local_Ar);
+        TStaticSerializer<decltype(this->{0})>::Serialize(this->{0}, local_Ar);
     }})", FieldName, FieldType);
         DeserializeBody += format(R"(
     if (content.contains("{0}"))
     {{
         FArchive local_Ar(content["{0}"], Ar);
-        TStaticSerializer<{1}>::Deserialize(this->{0}, local_Ar);
-    }})", FieldName, FieldType);
+        TStaticSerializer<decltype(this->{0})>::Deserialize(this->{0}, local_Ar);
+    }})", FieldName);
     }
     return { SerializeBody, DeserializeBody };
 }
