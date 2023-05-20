@@ -235,6 +235,8 @@ public:
         return GetClass()->GetType().GetName();
     }
 
+    virtual void PostDeserialize() { }
+
     bool bIsSerializing = false;
 };
 
@@ -245,7 +247,8 @@ inline NObject* CreateDefaultObject(const std::string& TypeName)
     NObject* pObject = BaseObject.AsPtr<NObject>();
     if (pObject) 
         return pObject;
-    Ubpa::UDRefl::Mngr.Delete(Object);
+    if (Object)
+        Ubpa::UDRefl::Mngr.Delete(Object);
     return nullptr;
 }
 
@@ -436,54 +439,6 @@ public:
         else
         {
             Object = Ar.Node.get<RawT>();
-        }
-    }
-};
-
-template<typename T>
-class TStaticSerializer<std::shared_ptr<T>>
-{
-    using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
-public:
-    static void Serialize(std::shared_ptr<RawT>& Object, FArchive& Ar) 
-    { 
-        if (Object)
-            Object->Serialize(Ar);
-    }
-    static void Deserialize(std::shared_ptr<RawT>& Object, FArchive& Ar) 
-    { 
-        if (Ar.Node.contains("ClassName"))
-        {
-            std::string class_name = Ar.Node["ClassName"];
-            if (Object == nullptr)
-                Object = std::shared_ptr<T>(static_cast<T*>(CreateDefaultObject(class_name)));
-
-            if (Object)
-                Object->Deserialize(Ar);
-        }
-    }
-};
-
-template<typename T>
-class TStaticSerializer<T*>
-{
-    using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
-public:
-    static void Serialize(RawT*& Object, FArchive& Ar) 
-    { 
-        if (Object)
-            Object->Serialize(Ar);
-    }
-    static void Deserialize(RawT*& Object, FArchive& Ar) 
-    { 
-        if (Ar.Node.contains("ClassName"))
-        {
-            std::string class_name = Ar.Node["ClassName"];
-            if (Object == nullptr)
-                Object = static_cast<T*>(CreateDefaultObject(class_name));
-            
-            if (Object)
-                Object->Deserialize(Ar);
         }
     }
 };
