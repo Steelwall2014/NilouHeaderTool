@@ -324,12 +324,14 @@ concept HasMethodResize = requires {
 template<typename T>
 class TStaticSerializer
 {
-    using RawT = std::remove_cv_t<std::remove_reference_t<T>>;
+    using RawT = std::remove_cvref_t<T>;
 public:
     static void Serialize(RawT &Object, FArchive& Ar) 
     { 
         if constexpr (std::is_enum_v<RawT>)
             Ar.Node = magic_enum::enum_name(Object);
+        else if constexpr (std::is_same_v<T, std::string>)
+            Ar.Node = Object;
         else if constexpr (HasMethodSerialize<RawT, void, FArchive&>)
             Object.Serialize(Ar);
         else if constexpr (IsMapType<T>)
@@ -377,6 +379,8 @@ public:
             if (opt)
                 Object = opt.value();
         }
+        else if constexpr (std::is_same_v<T, std::string>)
+            Object = Ar.Node.get<RawT>();
         else if constexpr (HasMethodDeserialize<RawT, void, FArchive&>)
             Object.Deserialize(Ar);
         else if constexpr (IsMapType<T>)
