@@ -25,6 +25,18 @@ target("NilouHeaderTool")
         add_defines("NILOU_DEBUG")
     end
 
+target("Test")
+    set_kind("binary")
+    add_files("test/**.cpp")
+    set_languages("clatest")
+    set_languages("cxx20")
+    add_includedirs("./External/include")
+    add_includedirs("./src/include")
+    set_runtimes("MD")
+    add_cxxflags("/bigobj")
+    add_links("./External/lib/*")
+    add_packages("vcpkg::magic-enum")
+
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

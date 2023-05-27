@@ -183,9 +183,9 @@ bool IsSupportedContainer(CXType Type)
 {
     string TypeName = GetClangString(clang_getTypeSpelling(Type));
     std::smatch match;
-    if (regex_match(TypeName, match, regex("std::(vector|array|set|map|unordered_map|unordered_set)<.+>")))
+    if (regex_match(TypeName, match, regex("(.*(vector|array|set|map|unordered_map|unordered_set)|.*(TAlignedStaticArray))<.+>")))
     {
-        if (match[1].str() == "array")
+        if (match[1].str() == "array" || match[1].str() == "TAlignedStaticArray")
         {
             CXType T = clang_Type_getTemplateArgumentAsType(Type, 0);
             if (!IsNStructOrBuiltin(T) && !IsNClassPtr(T) && !IsNClassSmartPtr(T))
