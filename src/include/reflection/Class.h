@@ -235,7 +235,10 @@ public:
         return GetClass()->GetType().GetName();
     }
 
-    virtual void PostDeserialize() { }
+    virtual void PreSerialize(FArchive& Ar) { }
+    virtual void PostSerialize(FArchive& Ar) { }
+    virtual void PreDeserialize(FArchive& Ar) { }
+    virtual void PostDeserialize(FArchive& Ar) { }
 
     bool bIsSerializing = false;
 };
