@@ -66,7 +66,7 @@ struct TypeMetaData
     string Name;
     string BaseClass;
     set<string> DerivedClasses;
-    map<string, string> Fields;
+    map<string, std::pair<bool, string>> Fields;
     set<string> Methods;
     vector<vector<string>> Constructors;
     string GeneratedFileCode;
@@ -348,11 +348,13 @@ void ParseHeaderFile(string filepath)
                             if (IsSupportedType(clang_getCursorType(parent)))
                             {
                                 auto& Fields = NTypes[class_name].Fields;
-                                Fields[field_name] = field_type;
+                                Fields[field_name] = {true, field_type};
                             }
                             else 
                             {
+                                auto& Fields = NTypes[class_name].Fields;
                                 cout << format("Unsupported type: {} {}\n", field_type, field_name);
+                                Fields[field_name] = {false, field_type};
                             }
                         }
                     }
@@ -496,9 +498,12 @@ string GenerateClassSerialize(const TypeMetaData& NClass)
     string SerializeBody, DeserializeBody;
     for (auto& [FieldName, FieldType] : NClass.Fields)
     {
-        auto [serialize_body, deserialize_body] = GenerateSerializeBody(FieldName, FieldType);
-        SerializeBody += serialize_body;
-        DeserializeBody += deserialize_body;
+        if (FieldType.first)
+        {
+            auto [serialize_body, deserialize_body] = GenerateSerializeBody(FieldName, FieldType.second);
+            SerializeBody += serialize_body;
+            DeserializeBody += deserialize_body;
+        }
     }
 
     string BaseSerialize, BaseDeserialize;
