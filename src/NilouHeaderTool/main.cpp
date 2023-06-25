@@ -598,6 +598,20 @@ int main(int argc, char *argv[])
     if (GeneratedCodePath[GeneratedCodePath.size()-1] == '\\' || GeneratedCodePath[GeneratedCodePath.size()-1] == '/')
         GeneratedCodePath = GeneratedCodePath.substr(0, GeneratedCodePath.size()-1);
 
+    map<string, long long> CachedHeaderModifiedTime;
+    filesystem::path CachedHeaderModifiedTimePath = filesystem::path(GeneratedCodePath) / filesystem::path("CachedHeaderModifiedTime.txt");
+    if (filesystem::exists(CachedHeaderModifiedTimePath))
+    {
+        ifstream in{CachedHeaderModifiedTimePath.string()};
+        while (!in.eof())
+        {
+            string filename;
+            long long last_modified_time;
+            in >> filename >> last_modified_time;
+            CachedHeaderModifiedTime[filename] = last_modified_time;
+        }
+    }
+
     for (int i = 3; i < argc; i++)
     {
         arguments.push_back("-I");
@@ -619,9 +633,16 @@ int main(int argc, char *argv[])
     [&](const std::string& filepath) 
         {
             if ((EndsWith(filepath, ".h") || EndsWith(filepath, ".hpp")) && 
-                 NeedsReflection(filepath))
+                NeedsReflection(filepath))
             {
-                files.push_back(filepath);
+                long long cached_last_modified_time = CachedHeaderModifiedTime[filesystem::path(filepath).generic_string()];
+                long long last_modified_time = filesystem::last_write_time(filepath).time_since_epoch().count();
+            
+                if (cached_last_modified_time == 0 || last_modified_time != cached_last_modified_time)
+                {
+                    files.push_back(filepath);
+                    CachedHeaderModifiedTime[filesystem::path(filepath).generic_string()] = last_modified_time;
+                }
             }
         });
 
@@ -639,6 +660,12 @@ int main(int argc, char *argv[])
 
     GenerateCode();
     WriteCode(GeneratedCodePath);
+
+    ofstream out{CachedHeaderModifiedTimePath};
+    for (auto& [filename, last_modified_time] : CachedHeaderModifiedTime)
+    {
+        out << filename << " " << last_modified_time << "\n";
+    }
 
     return 0;
 }
