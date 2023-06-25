@@ -667,9 +667,13 @@ int main(int argc, char *argv[])
     WriteCode(GeneratedCodePath);
 
     ofstream out{CachedHeaderModifiedTimePath};
+    int i = 0;
     for (auto& [filename, last_modified_time] : CachedHeaderModifiedTime)
     {
-        out << filename << " " << last_modified_time << "\n";
+        out << filename << " " << last_modified_time;
+        i++;
+        if (i != CachedHeaderModifiedTime.size())
+            out << "\n";
     }
 
     return 0;
