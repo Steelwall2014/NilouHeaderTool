@@ -1,5 +1,6 @@
 add_rules("mode.debug", "mode.release")
 add_requires("vcpkg::magic-enum")
+add_requires("vcpkg::fmt")
 
 function copyFunc(target)
     if is_plat("windows") then
@@ -20,6 +21,8 @@ target("NilouHeaderTool")
     set_languages("cxx20")
     add_includedirs("./External/include")
     add_links("./External/lib/*")
+    add_defines("FMT_USE_NONTYPE_TEMPLATE_ARGS=0")
+    add_packages("vcpkg::fmt")
     after_build(copyFunc)
     if is_mode("debug") then 
         add_defines("NILOU_DEBUG")

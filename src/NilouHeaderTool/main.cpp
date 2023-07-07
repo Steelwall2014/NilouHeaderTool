@@ -8,6 +8,7 @@
 #include <clang-c/Index.h>
 #include <regex>
 #include <execution>
+#include <fmt/format.h>
 
 #include "utils.h"
 
@@ -353,7 +354,7 @@ void ParseHeaderFile(string filepath)
                             else 
                             {
                                 auto& Fields = NTypes[class_name].Fields;
-                                cout << format("Unsupported type: {} {}\n", field_type, field_name);
+                                cout << fmt::format("Unsupported type: {} {}\n", field_type, field_name);
                                 Fields[field_name] = {false, field_type};
                             }
                         }
@@ -406,27 +407,27 @@ string GenerateTypeRegistry(const TypeMetaData& NClass)
         {
             args += ", " + Args[i];
         }
-        CtorBody += indent+format("Mngr.AddConstructor<{}{}>();\n", ClassName, args);
+        CtorBody += indent+fmt::format("Mngr.AddConstructor<{}{}>();\n", ClassName, args);
     }
     string FieldsBody;
     for (auto& [FieldName, FieldType] : NClass.Fields)
     {
-        FieldsBody += indent+format("Mngr.AddField<&{1}::{0}>(\"{0}\");\n", 
+        FieldsBody += indent+fmt::format("Mngr.AddField<&{1}::{0}>(\"{0}\");\n", 
             FieldName, ClassName);
     }
     string MethodsBody;
     for (auto& MethodName : NClass.Methods)
     {
-        MethodsBody += indent+format("Mngr.AddMethod<&{1}::{0}>(\"{0}\");\n", 
+        MethodsBody += indent+fmt::format("Mngr.AddMethod<&{1}::{0}>(\"{0}\");\n", 
             MethodName, ClassName);
     }
     string ClassHierarchyBody;
     if (NClass.BaseClass != "")
     {
-        ClassHierarchyBody += indent+format("Mngr.AddBases<{}, {}>();\n", 
+        ClassHierarchyBody += indent+fmt::format("Mngr.AddBases<{}, {}>();\n", 
             ClassName, NClass.BaseClass);
     }
-    return format(
+    return fmt::format(
 R"(
 std::unique_ptr<NClass> {0}::StaticClass_ = nullptr;
 const NClass *{0}::GetClass() const 
@@ -462,12 +463,12 @@ pair<string, string> GenerateSerializeBody(const string& FieldName, const string
     string SerializeBody, DeserializeBody;
     if (IsReflectedStruct(FieldType))
     {
-        SerializeBody += format(R"(
+        SerializeBody += fmt::format(R"(
     {{
         FArchive local_Ar(content["{0}"], Ar);
         this->{0}.Serialize(local_Ar);
     }})", FieldName);
-        DeserializeBody += format(R"(
+        DeserializeBody += fmt::format(R"(
     if (content.contains("{0}"))
     {{
         FArchive local_Ar(content["{0}"], Ar);
@@ -476,12 +477,12 @@ pair<string, string> GenerateSerializeBody(const string& FieldName, const string
     }
     else 
     {
-        SerializeBody += format(R"(
+        SerializeBody += fmt::format(R"(
     {{
         FArchive local_Ar(content["{0}"], Ar);
         TStaticSerializer<decltype(this->{0})>::Serialize(this->{0}, local_Ar);
     }})", FieldName, FieldType);
-        DeserializeBody += format(R"(
+        DeserializeBody += fmt::format(R"(
     if (content.contains("{0}"))
     {{
         FArchive local_Ar(content["{0}"], Ar);
@@ -509,13 +510,13 @@ string GenerateClassSerialize(const TypeMetaData& NClass)
     string BaseSerialize, BaseDeserialize;
     if (NClass.BaseClass != "")
     {
-        BaseSerialize = format("{}::Serialize(Ar);", NClass.BaseClass);
-        BaseDeserialize = format("{}::Deserialize(Ar);", NClass.BaseClass);
+        BaseSerialize = fmt::format("{}::Serialize(Ar);", NClass.BaseClass);
+        BaseDeserialize = fmt::format("{}::Deserialize(Ar);", NClass.BaseClass);
     }
 
     if (NClass.MetaType == "class")
     {
-        return format(
+        return fmt::format(
 R"(
 void {0}::Serialize(FArchive& Ar)
 {{
@@ -541,7 +542,7 @@ void {0}::Deserialize(FArchive& Ar)
     }
     else 
     {
-        return format(
+        return fmt::format(
 R"(
 void {0}::Serialize(FArchive& Ar)
 {{
@@ -566,7 +567,7 @@ void GenerateCode()
     {
             string TypeRegistry = GenerateTypeRegistry(NClass);
             string Serialize = GenerateClassSerialize(NClass);
-            NClass.GeneratedFileCode = format(R"(#include "{}"
+            NClass.GeneratedFileCode = fmt::format(R"(#include "{}"
 #include <UDRefl/UDRefl.hpp>
 
 using namespace Ubpa;
