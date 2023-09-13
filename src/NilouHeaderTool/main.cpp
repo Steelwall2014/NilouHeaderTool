@@ -606,6 +606,10 @@ int main(int argc, char *argv[])
 
     map<string, long long> CachedHeaderModifiedTime;
     filesystem::path CachedHeaderModifiedTimePath = filesystem::path(GeneratedCodePath) / filesystem::path("CachedHeaderModifiedTime.txt");
+    if (!filesystem::exists(GeneratedCodePath))
+    {
+        filesystem::create_directories(GeneratedCodePath);
+    }
     if (filesystem::exists(CachedHeaderModifiedTimePath))
     {
         ifstream in{CachedHeaderModifiedTimePath.string()};
