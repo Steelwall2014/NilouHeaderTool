@@ -1,4 +1,5 @@
 add_rules("mode.debug", "mode.release")
+set_runtimes("MD")
 add_requires("vcpkg::magic-enum")
 add_requires("vcpkg::fmt")
 

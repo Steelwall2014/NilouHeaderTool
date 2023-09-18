@@ -172,7 +172,8 @@ bool IsNStructOrBuiltin(CXType Type)
         "quat",
         "dquat",
         "std::string",
-        "FBinaryBuffer"
+        "FBinaryBuffer",
+        "nilou::FRotator"
     };
     string TypeName = GetClangString(clang_getTypeSpelling(Type));
     if (built_ins.contains(TypeName) || IsReflectedStruct(TypeName) || IsEnum(Type))
@@ -533,10 +534,10 @@ void {0}::Serialize(FArchive& Ar)
 
 void {0}::Deserialize(FArchive& Ar)
 {{
+    {4}
     nlohmann::json& Node = Ar.Node;
     nlohmann::json &content = Node["Content"];
 {3}
-    {4}
 }}
 )", ClassName, BaseSerialize, SerializeBody, DeserializeBody, BaseDeserialize);
     }
