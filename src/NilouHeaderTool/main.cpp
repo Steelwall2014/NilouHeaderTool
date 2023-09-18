@@ -355,7 +355,7 @@ void ParseHeaderFile(string filepath)
                             else 
                             {
                                 auto& Fields = NTypes[class_name].Fields;
-                                cout << fmt::format("Unsupported type: {} {}\n", field_type, field_name);
+                                cout << fmt::format("Unsupported type: {} {}, serialization code not generated, but you can still use reflection\n", field_type, field_name);
                                 Fields[field_name] = {false, field_type};
                             }
                         }
@@ -663,9 +663,12 @@ int main(int argc, char *argv[])
     auto policy = std::execution::par;
     #endif
 
+    mutex cout_mutex;
     std::for_each(policy, files.begin(), files.end(), 
-        [](const string& filepath) {
+        [&cout_mutex](const string& filepath) {
+            std::unique_lock<mutex> lock(cout_mutex);
             cout << filepath << endl;
+            lock.unlock();
             ParseHeaderFile(filepath);
         });
 
